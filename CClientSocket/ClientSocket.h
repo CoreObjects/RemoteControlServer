@@ -14,7 +14,8 @@ typedef struct  SMouseEvent {
 class CClientSocket {
 public:
 	static CClientSocket& GetInstance();
-	bool InitSocket(const std::string & strIPAddress);
+/*	bool InitSocket(const std::string & strIPAddress, WORD wPort);*/
+	bool InitSocket(DWORD dwIp, WORD wPort);
 	int DealCommand();
 	bool Send(const char* pData, size_t nSize);
 	bool Send(CPacket& packet) {

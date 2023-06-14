@@ -18,7 +18,7 @@ std::string GetErrInfo(int wsaErrCode) {
 	ret = (char*)lpMsgBuffer;
 	return ret;
 }
-bool CClientSocket::InitSocket(const std::string& strIPAddress) {
+bool CClientSocket::InitSocket(DWORD dwIp,WORD wPort) {
 	if (m_socket != INVALID_SOCKET) {
 		closesocket(m_socket);
 	}
@@ -27,16 +27,18 @@ bool CClientSocket::InitSocket(const std::string& strIPAddress) {
 	//TODO：校验
 	sockaddr_in serv_adr{ 0 };
 	serv_adr.sin_family = AF_INET;
-	serv_adr.sin_addr.S_un.S_addr = inet_addr(strIPAddress.c_str());
-	serv_adr.sin_port = htons(12138);
+//	serv_adr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
+	serv_adr.sin_addr.S_un.S_addr = htonl(dwIp);
+	TRACE("Server IP Adderss = %x\r\n", serv_adr.sin_addr.S_un.S_addr);
+	serv_adr.sin_port = htons(wPort);
 	//链接
 	if (serv_adr.sin_addr.S_un.S_addr == INADDR_NONE) {
-		AfxMessageBox(L"指定的IP地址不存在");
+		AfxMessageBox(_T("指定的IP地址不存在"));
 		TRACE("指定的IP地址不存在%d %s\r\n", WSAGetLastError(), GetErrInfo(WSAGetLastError()));
 		return false;
 	}
 	if (connect(m_socket, (sockaddr*)&serv_adr, sizeof(serv_adr)) == -1) {
-		AfxMessageBox(L"连接失败");
+		AfxMessageBox(_T("连接失败"));
 		TRACE("连接失败%d %s\r\n", WSAGetLastError(), GetErrInfo(WSAGetLastError()).c_str());
 		return false;
 	}

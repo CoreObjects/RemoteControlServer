@@ -43,7 +43,7 @@ int MakeDirverInfo() {
 	}
 	CPacket packet(1, result.c_str(), result.size());
 	Dump(packet.Data(), packet.Size());
-	//	CServerSocket::GetInstance().Send(packet);
+	CServerSocket::GetInstance().Send(packet);
 	return 0;
 }
 int RunFile() {

@@ -18,19 +18,40 @@
 
 CRemoteControlClientDlg::CRemoteControlClientDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_REMOTECONTROLCLIENT_DIALOG, pParent)
-{
+	, m_Server_address(0) {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
 void CRemoteControlClientDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_IPAddress(pDX, IDC_IPADDRESS_SERVER, m_Server_address);
+	DDX_Text(pDX, IDC_EDIT_PORT, m_nPort);
+	DDX_Control(pDX, IDC_TREE_DIR, m_Tree);
+}
+
+int CRemoteControlClientDlg::SendCommandPacket(int nCmd, char* pData, size_t nLength) {
+	UpdateData(TRUE);
+	CClientSocket& g_Client = CClientSocket::GetInstance();
+	bool ret = g_Client.InitSocket(m_Server_address, m_nPort);//TODO返回值处理
+	if (!ret) {
+		AfxMessageBox(_T("网络初始化失败"));
+		return -1;
+	}
+	CPacket packet(nCmd, pData, nLength);
+	ret = g_Client.Send(packet);
+	TRACE("ret = %d\r\n", ret);
+	nCmd = g_Client.DealCommand();
+	TRACE("ack:%d\r\n", g_Client.GetPacket().wCmd);
+	g_Client.CloseSocket();
+	return nCmd;
 }
 
 BEGIN_MESSAGE_MAP(CRemoteControlClientDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON1, &CRemoteControlClientDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON_FILE_INFO, &CRemoteControlClientDlg::OnBnClickedButtonFileInfo)
 END_MESSAGE_MAP()
 
 
@@ -46,7 +67,10 @@ BOOL CRemoteControlClientDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 设置小图标
 
 	// TODO: 在此添加额外的初始化代码
-
+	UpdateData();
+	m_Server_address = 0x7f000001;
+	m_nPort = 12138;
+	UpdateData(FALSE);
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -90,17 +114,30 @@ HCURSOR CRemoteControlClientDlg::OnQueryDragIcon()
 
 void CRemoteControlClientDlg::OnBnClickedButton1() {
 	// TODO: 在此添加控件通知处理程序代码
+	SendCommandPacket(1981);
+}
 
-	CClientSocket& g_Client = CClientSocket::GetInstance();
-	bool ret = g_Client.InitSocket("127.0.0.1");//TODO返回值处理
-	if (!ret) {
-		AfxMessageBox(L"网络初始化失败");
+
+void CRemoteControlClientDlg::OnBnClickedButtonFileInfo() {
+	// TODO: 在此添加控件通知处理程序代码
+	int ret = SendCommandPacket(1);
+	if (ret == -1) {
+		AfxMessageBox(_T("命令处理失败！！！"));
 		return;
 	}
-	CPacket packet(1981, nullptr, 0);
-	ret = g_Client.Send(packet);
-	TRACE("ret = %d\r\n", ret);
-	g_Client.DealCommand();
-	TRACE("ack:%d\r\n",g_Client.GetPacket().wCmd);
-	g_Client.CloseSocket();
+	CClientSocket& g_Client = CClientSocket::GetInstance();
+	std::string drivers = g_Client.GetPacket().strData;
+	std::string dr;
+	m_Tree.DeleteAllItems();
+	for (char i : drivers) {
+		if (i == ',') {
+			dr += ":";
+			m_Tree.InsertItem(dr.c_str(), TVI_ROOT, TVI_LAST);
+			dr.clear();
+			continue;
+		}
+		dr += i;
+	}
+	dr += ":";
+	m_Tree.InsertItem(dr.c_str(), TVI_ROOT, TVI_LAST);
 }
