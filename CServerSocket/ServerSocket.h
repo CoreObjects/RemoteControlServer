@@ -38,6 +38,13 @@ public:
 		}
 		return false;
 	}
+	CPacket& GetPacket() {
+		return m_Packet;
+	}
+	void CloseClient() {
+		closesocket(m_client);
+		m_client = INVALID_SOCKET;
+	}
 private:
 	// Delete copy constructor and assignment operator.
 	// This is usually done as part of making a class a Singleton.

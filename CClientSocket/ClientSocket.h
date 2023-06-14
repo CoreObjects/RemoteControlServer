@@ -18,6 +18,7 @@ public:
 	int DealCommand();
 	bool Send(const char* pData, size_t nSize);
 	bool Send(CPacket& packet) {
+		TRACE("m_Socket = %d\r\n", m_socket);
 		if (m_socket == -1)return false;
 		return send(m_socket, packet.Data(), packet.dwLength + 6, 0) > 0;
 	}
@@ -37,6 +38,13 @@ public:
 		}
 		return false;
 	}
+	CPacket& GetPacket() {
+		return m_Packet;
+	}
+	void CloseSocket() {
+		closesocket(m_socket);
+		m_socket = INVALID_SOCKET;
+	}
 private:
 	// Delete copy constructor and assignment operator.
 	// This is usually done as part of making a class a Singleton.
@@ -55,5 +63,6 @@ private:
 	}
 	SOCKET m_socket;
 	CPacket m_Packet;
+	std::vector<char> m_buffer;
 };
 extern CClientSocket& g_socket;

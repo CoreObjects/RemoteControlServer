@@ -6,6 +6,9 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RemoteControlServer", "RemoteControlServer\RemoteControlServer.vcxproj", "{BC6EC144-716D-46A1-9AEF-24D2FDC113A1}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RemoteControlClient", "RemoteControlClient\RemoteControlClient.vcxproj", "{0DDB29D0-783E-4C27-8FC5-2A5DD226B61E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BC6EC144-716D-46A1-9AEF-24D2FDC113A1} = {BC6EC144-716D-46A1-9AEF-24D2FDC113A1}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

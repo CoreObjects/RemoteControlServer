@@ -30,6 +30,7 @@ void CRemoteControlClientDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CRemoteControlClientDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_BN_CLICKED(IDC_BUTTON1, &CRemoteControlClientDlg::OnBnClickedButton1)
 END_MESSAGE_MAP()
 
 
@@ -85,3 +86,21 @@ HCURSOR CRemoteControlClientDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+
+
+void CRemoteControlClientDlg::OnBnClickedButton1() {
+	// TODO: 在此添加控件通知处理程序代码
+
+	CClientSocket& g_Client = CClientSocket::GetInstance();
+	bool ret = g_Client.InitSocket("127.0.0.1");//TODO返回值处理
+	if (!ret) {
+		AfxMessageBox(L"网络初始化失败");
+		return;
+	}
+	CPacket packet(1981, nullptr, 0);
+	ret = g_Client.Send(packet);
+	TRACE("ret = %d\r\n", ret);
+	g_Client.DealCommand();
+	TRACE("ack:%d\r\n",g_Client.GetPacket().wCmd);
+	g_Client.CloseSocket();
+}

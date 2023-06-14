@@ -290,6 +290,48 @@ int UnlockMachine() {
 	dlg.PostMessage(WM_KEYDOWN, 0x41, 0x01E0001);
 	return 0;
 }
+int TestConnect() {
+	CPacket packet(1981, NULL, 0);
+	bool ret = CServerSocket::GetInstance().Send(packet);
+	TRACE("Testconnet Send ret = %d\r\n", ret);
+	return 0;
+}
+int ExcuteCommand(int nCmd) {
+	int ret = 0;
+	switch (nCmd) {
+	case 1://查看磁盘分区
+		ret = MakeDirverInfo();
+		break;
+	case 2://查看目录文件
+		ret = MakeDirectoryInfo();
+		break;
+	case 3: //打开文件
+		ret = RunFile();
+		break;
+	case 4://下载文件
+		ret = DownloadFile();
+		break;
+	case 5://鼠标操作
+		ret = MouseEvent();
+		break;
+	case 6://发送屏幕内容==>发送屏幕的截图
+		ret = SendScreen();
+		break;
+	case 7://锁机
+		ret = LockMachine();
+		Sleep(100);
+		ret = LockMachine();
+		break;
+	case 8:
+		ret = UnlockMachine();
+		break;
+	case 1981:
+		ret = TestConnect();
+		break;
+	}
+	return ret;
+}
+
 int main() {
 	int nRetCode = 0;
 	HMODULE hModule = ::GetModuleHandle(nullptr);
@@ -301,64 +343,34 @@ int main() {
 		}
 		else {
 			//TODO:socket、bind、listen、accept、read、write、close
-// 			CServerSocket& serverSocket = CServerSocket::GetInstance();
-// 			if (serverSocket.InitSocket() == false) {
-// 				MessageBox(NULL, _T("网络初始化异常，未能成功初始化，请检查网络状态！"), _T("网络初始化失败"), MB_OK | MB_ICONERROR);
-// 				exit(0);
-// 			}
-// 			int nCount = 0;
-// 			while (1) {
-// 				if (serverSocket.AcceptClient() == false) {
-// 					if (nCount >= 3) {
-// 						MessageBox(NULL, _T("失败三次，退出！！！"), _T("网络初始化失败"), MB_OK | MB_ICONERROR);
-// 						exit(0);
-// 					}
-// 					MessageBox(NULL, _T("接入用户失败，无法正常接入用户，自动重试"), _T("网络初始化失败"), MB_OK | MB_ICONERROR);
-// 					nCount++;
-// 				}
-// 				nCount = 0;
-// 				int ret = serverSocket.DealCommand();
-// 				//TODO:
-// 
-// 
-// 			}
-			/*int nCmd = CServerSocket::GetInstance().DealCommand();;*/
-			int nCmd = 7;
-			switch (nCmd) {
-			case 1://查看磁盘分区
-				MakeDirverInfo();
-				break;
-			case 2://查看目录文件
-				MakeDirectoryInfo();
-				break;
-			case 3: //打开文件
-				RunFile();
-				break;
-			case 4://下载文件
-				DownloadFile();
-				break;
-			case 5://鼠标操作
-				MouseEvent();
-				break;
-			case 6://发送屏幕内容==>发送屏幕的截图
-				SendScreen();
-				break;
-			case 7://锁机
-				LockMachine();
-				Sleep(100);
-				LockMachine();
-				break;
-			case 8:
-				UnlockMachine();
-				break;
-
+			CServerSocket& serverSocket = CServerSocket::GetInstance();
+			if (serverSocket.InitSocket() == false) {
+				MessageBox(NULL, _T("网络初始化异常，未能成功初始化，请检查网络状态！"), _T("网络初始化失败"), MB_OK | MB_ICONERROR);
+				exit(0);
 			}
-			Sleep(5000);
-			UnlockMachine();
-			while (dlg.m_hWnd != NULL && dlg.m_hWnd != INVALID_HANDLE_VALUE);
-			Sleep(100);
-			TRACE("m_hwnd = %08x\r\n", dlg.m_hWnd);
-
+			int nCount = 0;
+			while (1) {
+				if (serverSocket.AcceptClient() == false) {
+					if (nCount >= 3) {
+						MessageBox(NULL, _T("失败三次，退出！！！"), _T("网络初始化失败"), MB_OK | MB_ICONERROR);
+						exit(0);
+					}
+					MessageBox(NULL, _T("接入用户失败，无法正常接入用户，自动重试"), _T("网络初始化失败"), MB_OK | MB_ICONERROR);
+					nCount++;
+				}
+				nCount = 0;
+				TRACE("AccepetClient return True \r\n");
+				int ret = serverSocket.DealCommand();
+				TRACE("Server DealCommand ret = %d\r\n", ret);
+				if (ret > 0) {
+					ret = ExcuteCommand(ret);
+					if (ret != 0) {
+						TRACE("执行命令失败，%d ret = %d\r\n", serverSocket.GetPacket().wCmd, ret);
+					}
+					serverSocket.CloseClient();
+					TRACE("Command has done!\r\n");
+				}
+			}
 		}
 	}
 	else {

@@ -27,10 +27,12 @@ bool CServerSocket::InitSocket() {
 }
 
 bool CServerSocket::AcceptClient() {
+	TRACE("enter AcceptClient\r\n");
 	//accept
 	sockaddr_in client_adr{ 0 };
 	int cli_sz = sizeof(client_adr);
 	m_client = accept(m_socket, (sockaddr*)&client_adr, &cli_sz);
+	TRACE("m_Client = %d\r\n", m_client);
 	if (m_client == -1) {
 		return false;
 	}
@@ -47,6 +49,7 @@ int CServerSocket::DealCommand() {
 	while (true) {
 		size_t nLength = recv(m_client, buffer + index, BUFFER_SIZE - index, 0);
 		if (nLength <= 0)return -1;
+		TRACE("server recv len:%d \r\n", nLength);
 		index += nLength;
 		nLength = index;
 		m_Packet = CPacket(buffer, nLength);

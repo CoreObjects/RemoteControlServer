@@ -8,7 +8,7 @@ CClientSocket& CClientSocket::GetInstance() {
 	static CClientSocket instance;
 	return instance;
 }
-std::string GetErrorInfo(int wsaErrCode) {
+std::string GetErrInfo(int wsaErrCode) {
 	std::string ret;
 	LPVOID lpMsgBuffer = nullptr;
 	FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,\
@@ -19,6 +19,10 @@ std::string GetErrorInfo(int wsaErrCode) {
 	return ret;
 }
 bool CClientSocket::InitSocket(const std::string& strIPAddress) {
+	if (m_socket != INVALID_SOCKET) {
+		closesocket(m_socket);
+	}
+	m_socket = socket(PF_INET, SOCK_STREAM, 0);
 	if (m_socket == -1)return false;
 	//TODO：校验
 	sockaddr_in serv_adr{ 0 };
@@ -28,12 +32,12 @@ bool CClientSocket::InitSocket(const std::string& strIPAddress) {
 	//链接
 	if (serv_adr.sin_addr.S_un.S_addr == INADDR_NONE) {
 		AfxMessageBox(L"指定的IP地址不存在");
-		TRACE("指定的IP地址不存在%d %s\r\n", WSAGetLastError(), GetErrorInfo(WSAGetLastError()));
+		TRACE("指定的IP地址不存在%d %s\r\n", WSAGetLastError(), GetErrInfo(WSAGetLastError()));
 		return false;
 	}
 	if (connect(m_socket, (sockaddr*)&serv_adr, sizeof(serv_adr)) == -1) {
 		AfxMessageBox(L"连接失败");
-		TRACE("连接失败%d %s\r\n", WSAGetLastError(), GetErrorInfo(WSAGetLastError()));
+		TRACE("连接失败%d %s\r\n", WSAGetLastError(), GetErrInfo(WSAGetLastError()).c_str());
 		return false;
 	}
 	return true;
@@ -41,11 +45,12 @@ bool CClientSocket::InitSocket(const std::string& strIPAddress) {
 #define BUFFER_SIZE 0x1000
 int CClientSocket::DealCommand() {
 	if (m_socket == -1)return -1;
-	char buffer[BUFFER_SIZE]{ 0 };
+	char* buffer = m_buffer.data();
 	size_t index = 0;
 	while (true) {
 		size_t nLength = recv(m_socket, buffer + index, BUFFER_SIZE - index, 0);
 		if (nLength <= 0)return -1;
+		TRACE("Client recv len:%d \r\n", nLength);
 		index += nLength;
 		nLength = index;
 		m_Packet = CPacket(buffer, nLength);
@@ -69,10 +74,12 @@ CClientSocket::CClientSocket() {
 		MessageBox(NULL, _T("初始化套接字环境失败,请检查网络设置！"), \
 			_T("初始化错误！"), MB_OK | MB_ICONERROR);
 	}
-	m_socket = socket(PF_INET, SOCK_STREAM, 0);
+	m_buffer.resize(BUFFER_SIZE);
 }
 
 CClientSocket::~CClientSocket() {
-	closesocket(m_socket);
+	if (m_socket != INVALID_SOCKET) {
+		closesocket(m_socket);
+	}
 	WSACleanup();
 }

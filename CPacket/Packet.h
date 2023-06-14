@@ -15,12 +15,11 @@ public:
 			memcpy((void*)strData.c_str(), pData, nSize);
 			strData.resize(nSize);
 			memcpy((void*)strData.c_str(), pData, nSize);
-			CRC16 crc16;
-			wSum = crc16.calculate(pData, nSize);
+			wSum = CRC16::getInstance().calculate(pData, nSize);
 		}
 		else {
 			strData.clear();
-			wSum = 0;
+			wSum = CRC16::getInstance().calculate(pData, nSize);
 		}
 		
 	}
@@ -50,10 +49,10 @@ public:
 		}
 		wSum = *(WORD*)(pData + i);
 		i += 2;
-		CRC16 crc16;
-		WORD wCrcSum = crc16.calculate(strData.c_str(), strData.size());
+		WORD wCrcSum = CRC16::getInstance().calculate(strData.c_str(), strData.size());
 		if (wSum == wCrcSum) {
 			nSize = i;
+			return;
 		}
 		nSize = 0;
 	}
