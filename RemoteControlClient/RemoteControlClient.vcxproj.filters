@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Framework">
+      <UniqueIdentifier>{5430e455-6abe-4dc3-93a1-2b1fb50a37ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Page">
+      <UniqueIdentifier>{1961f8a0-969d-459f-a849-78dcc2dae5e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CRC">
+      <UniqueIdentifier>{fc419a28-57d1-4f38-aa84-36cc1a577b64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CPacket">
+      <UniqueIdentifier>{cf8e0d83-7e09-4d1a-b6a3-37085eaf7f27}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CClientSocket">
+      <UniqueIdentifier>{7042d204-35d3-4f76-a558-26c9b343050e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="RemoteControlClient.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RemoteControlClientDlg.h">
+      <Filter>Page</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FrameWork\framework.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\FrameWork\targetver.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CRC\CRC16.h">
+      <Filter>CRC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CRC\CRC32.h">
+      <Filter>CRC</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CPacket\Packet.h">
+      <Filter>CPacket</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CClientSocket\ClientSocket.h">
+      <Filter>CClientSocket</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="RemoteControlClient.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RemoteControlClientDlg.cpp">
+      <Filter>Page</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CPacket\Packet.cpp">
+      <Filter>CPacket</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CClientSocket\ClientSocket.cpp">
+      <Filter>CClientSocket</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="RemoteControlClient.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\RemoteControlClient.rc2">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\RemoteControlClient.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
