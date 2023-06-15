@@ -8,18 +8,7 @@
 #include <io.h>
 #include <list>
 #include <atlimage.h>
-typedef struct file_info {
-	file_info() {
-		IsInvalid = 0;
-		IsDirectory = -1;
-		HasNext = TRUE;
-		memset(szFileName, 0, MAX_PATH);
-	}
-	BOOL IsInvalid;//是否无效
-	BOOL IsDirectory;
-	BOOL HasNext;//是否还有后续0没有，1有
-	char szFileName[MAX_PATH];
-}FILEINFO, * PFILEINFO;
+
 CWinApp theApp;
 
 using namespace std;
@@ -99,6 +88,7 @@ int MakeDirectoryInfo() {
 		fInfo.HasNext = FALSE;
 		memcpy(fInfo.szFileName, strPath.c_str(), strPath.size());
 		/*lstFileInfos.push_back(fInfo);*/
+		TRACE("服务器：获取文件名 %s\r\n", fInfo.szFileName);
 		CPacket packet(2, (const char*)&fInfo, sizeof(fInfo));
 		CServerSocket::GetInstance().Send(packet);
 		OutputDebugString(L"没有权限，访问目录！！！");
@@ -106,15 +96,23 @@ int MakeDirectoryInfo() {
 	}
 	_finddata_t fdata;
 	int hfind = 0;
-	if (hfind = _findfirst("*", &fdata) == -1) {
+	if ((hfind = _findfirst("*", &fdata)) == -1) {
 		OutputDebugString(L"没有找到任何文件！！！");
+		FILEINFO fInfo;
+		fInfo.HasNext = FALSE;
+		TRACE("服务器：获取文件名 %s\r\n", fInfo.szFileName);
+		TRACE("服务器：获取是否是目录 %d\r\n", fInfo.IsDirectory);
+		CPacket packet(2, (const char*)&fInfo, sizeof(fInfo));
+		CServerSocket::GetInstance().Send(packet);
 		return -3;
 	}
 	do {
 		FILEINFO fInfo;
-		fInfo.IsDirectory = fdata.attrib & _A_SUBDIR;
+		fInfo.IsDirectory = (fdata.attrib & _A_SUBDIR) != 0;
 		memcpy(fInfo.szFileName, fdata.name, strlen(fdata.name));
 		/*lstFileInfos.push_back(fInfo);*/
+		TRACE("服务器：获取文件名 %s\r\n", fInfo.szFileName);
+		TRACE("服务器：获取是否是目录 %d\r\n", fInfo.IsDirectory);
 		CPacket packet(2, (const char*)&fInfo, sizeof(fInfo));
 		CServerSocket::GetInstance().Send(packet);
 	} while (!_findnext(hfind, &fdata));
@@ -322,10 +320,10 @@ int ExcuteCommand(int nCmd) {
 		Sleep(100);
 		ret = LockMachine();
 		break;
-	case 8:
+	case 8://解锁
 		ret = UnlockMachine();
 		break;
-	case 1981:
+	case 1981://连接测试
 		ret = TestConnect();
 		break;
 	}

@@ -28,9 +28,10 @@ void CRemoteControlClientDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_IPAddress(pDX, IDC_IPADDRESS_SERVER, m_Server_address);
 	DDX_Text(pDX, IDC_EDIT_PORT, m_nPort);
 	DDX_Control(pDX, IDC_TREE_DIR, m_Tree);
+	DDX_Control(pDX, IDC_LIST_FILE, m_List);
 }
 
-int CRemoteControlClientDlg::SendCommandPacket(int nCmd, char* pData, size_t nLength) {
+int CRemoteControlClientDlg::SendCommandPacket(int nCmd, bool bAutoClose, char* pData, size_t nLength) {
 	UpdateData(TRUE);
 	CClientSocket& g_Client = CClientSocket::GetInstance();
 	bool ret = g_Client.InitSocket(m_Server_address, m_nPort);//TODO返回值处理
@@ -43,7 +44,8 @@ int CRemoteControlClientDlg::SendCommandPacket(int nCmd, char* pData, size_t nLe
 	TRACE("ret = %d\r\n", ret);
 	nCmd = g_Client.DealCommand();
 	TRACE("ack:%d\r\n", g_Client.GetPacket().wCmd);
-	g_Client.CloseSocket();
+	if(bAutoClose)
+		g_Client.CloseSocket();
 	return nCmd;
 }
 
@@ -52,6 +54,9 @@ BEGIN_MESSAGE_MAP(CRemoteControlClientDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDC_BUTTON1, &CRemoteControlClientDlg::OnBnClickedButton1)
 	ON_BN_CLICKED(IDC_BUTTON_FILE_INFO, &CRemoteControlClientDlg::OnBnClickedButtonFileInfo)
+	ON_NOTIFY(NM_DBLCLK, IDC_TREE_DIR, &CRemoteControlClientDlg::OnNMDblclkTreeDir)
+	ON_NOTIFY(NM_CLICK, IDC_TREE_DIR, &CRemoteControlClientDlg::OnNMClickTreeDir)
+	ON_NOTIFY(NM_RCLICK, IDC_LIST_FILE, &CRemoteControlClientDlg::OnNMRClickListFile)
 END_MESSAGE_MAP()
 
 
@@ -132,12 +137,122 @@ void CRemoteControlClientDlg::OnBnClickedButtonFileInfo() {
 	for (char i : drivers) {
 		if (i == ',') {
 			dr += ":";
-			m_Tree.InsertItem(dr.c_str(), TVI_ROOT, TVI_LAST);
+			HTREEITEM hTemp = m_Tree.InsertItem(dr.c_str(), TVI_ROOT, TVI_LAST);
+			m_Tree.InsertItem(NULL, hTemp, TVI_LAST);
 			dr.clear();
 			continue;
 		}
 		dr += i;
 	}
 	dr += ":";
-	m_Tree.InsertItem(dr.c_str(), TVI_ROOT, TVI_LAST);
+	HTREEITEM hTemp = m_Tree.InsertItem(dr.c_str(), TVI_ROOT, TVI_LAST);
+	m_Tree.InsertItem(NULL, hTemp, TVI_LAST);
 }
+
+CString CRemoteControlClientDlg::GetPath(HTREEITEM hTree) {
+	CString strRet, strTmp;
+	do 
+	{
+		strTmp = m_Tree.GetItemText(hTree);
+		strRet = (strTmp + '\\' + strRet);
+		hTree = m_Tree.GetParentItem(hTree);
+	} while (hTree != NULL);
+	return strRet;
+}
+
+void CRemoteControlClientDlg::DeleteTreeChildItem(HTREEITEM hTree) {
+	HTREEITEM hSub = nullptr;
+	do 
+	{
+		hSub = m_Tree.GetChildItem(hTree);
+		if (hSub != NULL) {
+			m_Tree.DeleteItem(hSub);
+		}
+	} while (hSub);
+//	m_Tree.DeleteItem(hTree);
+}
+
+void CRemoteControlClientDlg::LoadFileInfo() {
+	CPoint ptMouse;
+	GetCursorPos(&ptMouse);
+	m_Tree.ScreenToClient(&ptMouse);
+	HTREEITEM hTreeSelected = m_Tree.HitTest(ptMouse, 0);
+	if (hTreeSelected == NULL) {
+		return;
+	}
+	if (m_Tree.GetChildItem(hTreeSelected) == NULL) {
+		return;
+	}
+	CString strPath = GetPath(hTreeSelected);
+	DeleteTreeChildItem(hTreeSelected);
+	m_List.DeleteAllItems();
+	int nCmd = SendCommandPacket(2, false, (char*)(LPCTSTR)strPath, strPath.GetLength());
+	PFILEINFO pInfo = (PFILEINFO)CClientSocket::GetInstance().GetPacket().strData.c_str();
+
+	CClientSocket& g_Client = CClientSocket::GetInstance();
+	while (pInfo->HasNext) {
+		TRACE("客户端：获取文件名 %s\r\n", pInfo->szFileName);
+		TRACE("客户端：获取是否是目录 %d\r\n", pInfo->IsDirectory);
+		if (pInfo->IsDirectory) {
+			if (CString(pInfo->szFileName) == "." || (CString)pInfo->szFileName == "..") {
+				int cmd = g_Client.DealCommand();
+				TRACE("acl:%d\r\n", cmd);
+				if (cmd < 0) break;
+				pInfo = (PFILEINFO)CClientSocket::GetInstance().GetPacket().strData.c_str();
+				continue;
+			}
+			HTREEITEM hTemp = m_Tree.InsertItem(pInfo->szFileName, hTreeSelected, TVI_LAST);
+			m_Tree.InsertItem(NULL, hTemp, TVI_LAST);
+		}
+		else {
+			m_List.InsertItem(0, pInfo->szFileName);
+		}
+		
+		
+		int cmd = g_Client.DealCommand();
+		TRACE("acl:%d\r\n", cmd);
+		if (cmd < 0) break;
+		pInfo = (PFILEINFO)CClientSocket::GetInstance().GetPacket().strData.c_str();
+	}
+	g_Client.CloseSocket();
+}
+
+void CRemoteControlClientDlg::OnNMDblclkTreeDir(NMHDR* pNMHDR, LRESULT* pResult) {
+	*pResult = 0;
+	LoadFileInfo();
+}
+
+
+void CRemoteControlClientDlg::OnNMClickTreeDir(NMHDR* pNMHDR, LRESULT* pResult) {
+	*pResult = 0;
+	LoadFileInfo();
+}
+
+
+void CRemoteControlClientDlg::OnNMRClickListFile(NMHDR* pNMHDR, LRESULT* pResult) {
+	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+
+	int nItem = m_List.GetNextItem(-1, LVNI_SELECTED);
+	if (nItem != -1) {
+		CString strText = m_List.GetItemText(nItem, 0); // 获取第0列（即第一列）的文本
+		TRACE("选中的项的文本是: %s\n", strText);
+		// Do something with strText...
+
+		// 弹出菜单
+		CMenu menu;
+		if (menu.LoadMenu(IDR_MENU1)) {  // 加载菜单
+			CMenu* pPopup = menu.GetSubMenu(0);  // 获取弹出菜单
+			if (pPopup != nullptr) {
+				CPoint mousePoint;
+				::GetCursorPos(&mousePoint);  // 获取鼠标位置
+				pPopup->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, mousePoint.x, mousePoint.y, this);
+			}
+		}
+	}
+	else {
+		TRACE("没有项被选中.\n");
+	}
+
+	*pResult = 0;
+}
+

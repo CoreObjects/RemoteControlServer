@@ -11,6 +11,18 @@ typedef struct  SMouseEvent {
 	WORD nButton;//左键、右键、中键
 	POINT ptXY;//坐标
 }MOUSEEV, PMOUSEEV;
+typedef struct file_info {
+	file_info() {
+		IsInvalid = 0;
+		IsDirectory = -1;
+		HasNext = TRUE;
+		memset(szFileName, 0, MAX_PATH);
+	}
+	BOOL IsInvalid;//是否无效
+	BOOL IsDirectory;
+	BOOL HasNext;//是否还有后续0没有，1有
+	char szFileName[MAX_PATH];
+}FILEINFO, * PFILEINFO;
 class CClientSocket {
 public:
 	static CClientSocket& GetInstance();
