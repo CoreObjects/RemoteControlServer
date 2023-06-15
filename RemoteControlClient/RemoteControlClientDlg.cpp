@@ -57,6 +57,9 @@ BEGIN_MESSAGE_MAP(CRemoteControlClientDlg, CDialogEx)
 	ON_NOTIFY(NM_DBLCLK, IDC_TREE_DIR, &CRemoteControlClientDlg::OnNMDblclkTreeDir)
 	ON_NOTIFY(NM_CLICK, IDC_TREE_DIR, &CRemoteControlClientDlg::OnNMClickTreeDir)
 	ON_NOTIFY(NM_RCLICK, IDC_LIST_FILE, &CRemoteControlClientDlg::OnNMRClickListFile)
+	ON_COMMAND(ID_32771, &CRemoteControlClientDlg::OndownloadFile)
+	ON_COMMAND(ID_32772, &CRemoteControlClientDlg::OnDeletFile)
+	ON_COMMAND(ID_32773, &CRemoteControlClientDlg::OnOpenFile)
 END_MESSAGE_MAP()
 
 
@@ -256,3 +259,56 @@ void CRemoteControlClientDlg::OnNMRClickListFile(NMHDR* pNMHDR, LRESULT* pResult
 	*pResult = 0;
 }
 
+
+#pragma warning(disable: 4996)
+void CRemoteControlClientDlg::OndownloadFile() {
+	int nItem = m_List.GetNextItem(-1, LVNI_SELECTED);
+	CString strFile = m_List.GetItemText(nItem, 0); // 获取第0列（即第一列）的文本
+	CFileDialog fdlg(FALSE, "*.*", strFile, OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY, NULL, this);
+
+	INT_PTR fDlgRet = fdlg.DoModal();
+	if (fDlgRet == IDOK) {
+		FILE* pFile = fopen(fdlg.GetPathName(), "wb+");
+		if (pFile == NULL) {
+			AfxMessageBox("本地没有权限保存该文件，或者文件无法创建！！！");
+			return;
+		}
+		HTREEITEM hItem = m_Tree.GetSelectedItem();
+		strFile = GetPath(hItem) + strFile;
+		TRACE("文件的路径是: %s\n", strFile);
+		int ret = SendCommandPacket(4, false, (char*)(LPCSTR)strFile, strFile.GetLength());
+		if (ret < 0) {
+			AfxMessageBox("下载失败");
+			return;
+		}
+		CClientSocket& g_Client = CClientSocket::GetInstance();
+		long long nlength = *(long long*)g_Client.GetPacket().strData.c_str();
+		if (nlength == 0) {
+			AfxMessageBox("文件长度为0，无法下载");
+			return;
+		}
+		long long nCount = 0;
+		
+		while (nCount < nlength) {
+			ret = g_Client.DealCommand();
+			if (ret < 0) {
+				AfxMessageBox("传输失败，ret = %d\r\n", ret);
+				TRACE("传输失败：ret = %d\r\n", ret);
+				break;
+			}
+			fwrite(g_Client.GetPacket().strData.c_str(), 1, g_Client.GetPacket().strData.size(), pFile);
+		}
+		fclose(pFile);
+	};
+	
+}
+
+
+void CRemoteControlClientDlg::OnDeletFile() {
+	// TODO: 在此添加命令处理程序代码
+}
+
+
+void CRemoteControlClientDlg::OnOpenFile() {
+	// TODO: 在此添加命令处理程序代码
+}

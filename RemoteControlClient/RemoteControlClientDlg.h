@@ -55,4 +55,7 @@ public:
 	afx_msg void OnNMClickTreeDir(NMHDR* pNMHDR, LRESULT* pResult);
 	CListCtrl m_List;
 	afx_msg void OnNMRClickListFile(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OndownloadFile();
+	afx_msg void OnDeletFile();
+	afx_msg void OnOpenFile();
 };
