@@ -35,6 +35,7 @@ private:
 	CString GetPath(HTREEITEM hTree);
 	void DeleteTreeChildItem(HTREEITEM hTree);
 	void LoadFileInfo();
+	void LoadFileCurrent();
 // 实现
 protected:
 	HICON m_hIcon;

@@ -220,6 +220,28 @@ void CRemoteControlClientDlg::LoadFileInfo() {
 	g_Client.CloseSocket();
 }
 
+void CRemoteControlClientDlg::LoadFileCurrent() {
+	HTREEITEM hTree = m_Tree.GetSelectedItem();
+	CString strPath = GetPath(hTree);
+	m_List.DeleteAllItems();
+	int nCmd = SendCommandPacket(2, false, (char*)(LPCTSTR)strPath, strPath.GetLength());
+	PFILEINFO pInfo = (PFILEINFO)CClientSocket::GetInstance().GetPacket().strData.c_str();
+
+	CClientSocket& g_Client = CClientSocket::GetInstance();
+	while (pInfo->HasNext) {
+		TRACE("客户端：获取文件名 %s\r\n", pInfo->szFileName);
+		TRACE("客户端：获取是否是目录 %d\r\n", pInfo->IsDirectory);
+		if (!pInfo->IsDirectory) {
+			m_List.InsertItem(0, pInfo->szFileName);
+		}
+		int cmd = g_Client.DealCommand();
+		TRACE("acl:%d\r\n", cmd);
+		if (cmd < 0) break;
+		pInfo = (PFILEINFO)CClientSocket::GetInstance().GetPacket().strData.c_str();
+	}
+	g_Client.CloseSocket();
+}
+
 void CRemoteControlClientDlg::OnNMDblclkTreeDir(NMHDR* pNMHDR, LRESULT* pResult) {
 	*pResult = 0;
 	LoadFileInfo();
@@ -264,8 +286,8 @@ void CRemoteControlClientDlg::OnNMRClickListFile(NMHDR* pNMHDR, LRESULT* pResult
 void CRemoteControlClientDlg::OndownloadFile() {
 	int nItem = m_List.GetNextItem(-1, LVNI_SELECTED);
 	CString strFile = m_List.GetItemText(nItem, 0); // 获取第0列（即第一列）的文本
-	CFileDialog fdlg(FALSE, "*.*", strFile, OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY, NULL, this);
-
+	CFileDialog fdlg(FALSE, "*", strFile, OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY, NULL, this);
+	CClientSocket& g_Client = CClientSocket::GetInstance();
 	INT_PTR fDlgRet = fdlg.DoModal();
 	if (fDlgRet == IDOK) {
 		FILE* pFile = fopen(fdlg.GetPathName(), "wb+");
@@ -279,12 +301,15 @@ void CRemoteControlClientDlg::OndownloadFile() {
 		int ret = SendCommandPacket(4, false, (char*)(LPCSTR)strFile, strFile.GetLength());
 		if (ret < 0) {
 			AfxMessageBox("下载失败");
+			fclose(pFile);
+			g_Client.CloseSocket();
 			return;
 		}
-		CClientSocket& g_Client = CClientSocket::GetInstance();
 		long long nlength = *(long long*)g_Client.GetPacket().strData.c_str();
 		if (nlength == 0) {
 			AfxMessageBox("文件长度为0，无法下载");
+			fclose(pFile);
+			g_Client.CloseSocket();
 			return;
 		}
 		long long nCount = 0;
@@ -297,8 +322,10 @@ void CRemoteControlClientDlg::OndownloadFile() {
 				break;
 			}
 			fwrite(g_Client.GetPacket().strData.c_str(), 1, g_Client.GetPacket().strData.size(), pFile);
+			nCount += g_Client.GetPacket().strData.size();
 		}
 		fclose(pFile);
+		g_Client.CloseSocket();
 	};
 	
 }
@@ -306,9 +333,27 @@ void CRemoteControlClientDlg::OndownloadFile() {
 
 void CRemoteControlClientDlg::OnDeletFile() {
 	// TODO: 在此添加命令处理程序代码
+	int nItem = m_List.GetNextItem(-1, LVNI_SELECTED);
+	CString strFile = m_List.GetItemText(nItem, 0);
+	HTREEITEM hItem = m_Tree.GetSelectedItem();
+	strFile = GetPath(hItem) + strFile;
+	TRACE("删除文件路径：%s", strFile.GetBuffer());
+	int Ret = SendCommandPacket(9, true, strFile.GetBuffer(), strFile.GetLength());
+	if (Ret < 0) {
+		AfxMessageBox("打开文件命令执行失败！！！");
+	}
+	LoadFileCurrent();
 }
 
 
 void CRemoteControlClientDlg::OnOpenFile() {
-	// TODO: 在此添加命令处理程序代码
+	int nItem = m_List.GetNextItem(-1, LVNI_SELECTED);
+	CString strFile = m_List.GetItemText(nItem, 0);
+	HTREEITEM hItem = m_Tree.GetSelectedItem();
+	strFile = GetPath(hItem) + strFile;
+	TRACE("删除文件路径：%s", strFile.GetBuffer());
+	int Ret = SendCommandPacket(3, true, strFile.GetBuffer(), strFile.GetLength());
+	if (Ret < 0) {
+		AfxMessageBox("打开文件命令执行失败！！！");
+	}
 }

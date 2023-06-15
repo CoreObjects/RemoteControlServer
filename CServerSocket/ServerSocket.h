@@ -37,7 +37,7 @@ public:
 		return send(m_client, packet.Data(), packet.dwLength + 6, 0) > 0;
 	}
 	bool GetFilePath(std::string& strPath) {
-		if ((m_Packet.wCmd <= 4 && m_Packet.wCmd >= 0x2)) {
+		if ((m_Packet.wCmd == 9)||(m_Packet.wCmd <= 4 && m_Packet.wCmd >= 0x2)) {
 			strPath = m_Packet.strData;
 			return true;
 		}
