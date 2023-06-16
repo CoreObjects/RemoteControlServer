@@ -97,6 +97,7 @@ int MakeDirectoryInfo() {
 	}
 	_finddata_t fdata;
 	int hfind = 0;
+	
 	if ((hfind = _findfirst("*", &fdata)) == -1) {
 		OutputDebugString(L"没有找到任何文件！！！");
 		FILEINFO fInfo;
@@ -107,6 +108,7 @@ int MakeDirectoryInfo() {
 		CServerSocket::GetInstance().Send(packet);
 		return -3;
 	}
+	int nCount = 0;
 	do {
 		FILEINFO fInfo;
 		fInfo.IsDirectory = (fdata.attrib & _A_SUBDIR) != 0;
@@ -116,10 +118,12 @@ int MakeDirectoryInfo() {
 		TRACE("服务器：获取是否是目录 %d\r\n", fInfo.IsDirectory);
 		CPacket packet(2, (const char*)&fInfo, sizeof(fInfo));
 		CServerSocket::GetInstance().Send(packet);
+		nCount++;
 	} while (!_findnext(hfind, &fdata));
 	//发送信息到控制端。
 	FILEINFO fInfo;
 	fInfo.HasNext = FALSE;
+	TRACE("服务器一共发送%d个文件\r\n", nCount);
 	CPacket packet(2, (const char*)&fInfo, sizeof(fInfo));
 	CServerSocket::GetInstance().Send(packet);
 	return 0;

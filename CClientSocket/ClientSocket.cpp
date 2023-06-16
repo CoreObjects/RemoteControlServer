@@ -48,17 +48,17 @@ bool CClientSocket::InitSocket(DWORD dwIp,WORD wPort) {
 int CClientSocket::DealCommand() {
 	if (m_socket == -1)return -1;
 	char* buffer = m_buffer.data();
-	size_t index = 0;
+	static size_t index = 0;
 	while (true) {
 		size_t nLength = recv(m_socket, buffer + index, BUFFER_SIZE - index, 0);
-		if (nLength <= 0)return -1;
+		if (nLength <= 0 && index == 0)return -1;
 		TRACE("Client recv len:%d \r\n", nLength);
 		index += nLength;
 		nLength = index;
 		m_Packet = CPacket(buffer, nLength);
 		if (nLength > 0) {
-			memmove(buffer, buffer + nLength, BUFFER_SIZE - nLength);
-			index += nLength;
+			memmove(buffer, buffer + nLength, index - nLength);
+			index -= nLength;
 			return m_Packet.wCmd;
 		}
 	}

@@ -45,17 +45,17 @@ bool CServerSocket::AcceptClient() {
 int CServerSocket::DealCommand() {
 	if (m_client == -1)return -1;
 	char buffer[BUFFER_SIZE]{ 0 };
-	size_t index = 0;
+	static size_t index = 0;
 	while (true) {
 		size_t nLength = recv(m_client, buffer + index, BUFFER_SIZE - index, 0);
-		if (nLength <= 0)return -1;
+		if (nLength <= 0 && index == 0)return -1;
 		TRACE("server recv len:%d \r\n", nLength);
 		index += nLength;
 		nLength = index;
 		m_Packet = CPacket(buffer, nLength);
 		if (nLength > 0) {
-			memmove(buffer, buffer + nLength, BUFFER_SIZE - nLength);
-			index += nLength;
+			memmove(buffer, buffer + nLength, index - nLength);
+			index -= nLength;
 			return m_Packet.wCmd;
 		}
 	}

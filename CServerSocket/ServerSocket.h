@@ -33,7 +33,7 @@ public:
 	bool Send(const char* pData, size_t nSize);
 	bool Send(CPacket& packet) {
 		if (m_client == -1)return false;
-		Dump(packet.Data(), packet.Size());
+		//Dump(packet.Data(), packet.Size());
 		return send(m_client, packet.Data(), packet.dwLength + 6, 0) > 0;
 	}
 	bool GetFilePath(std::string& strPath) {

@@ -191,9 +191,10 @@ void CRemoteControlClientDlg::LoadFileInfo() {
 	m_List.DeleteAllItems();
 	int nCmd = SendCommandPacket(2, false, (char*)(LPCTSTR)strPath, strPath.GetLength());
 	PFILEINFO pInfo = (PFILEINFO)CClientSocket::GetInstance().GetPacket().strData.c_str();
-
+	int nCount = 0;
 	CClientSocket& g_Client = CClientSocket::GetInstance();
 	while (pInfo->HasNext) {
+		nCount++;
 		TRACE("客户端：获取文件名 %s\r\n", pInfo->szFileName);
 		TRACE("客户端：获取是否是目录 %d\r\n", pInfo->IsDirectory);
 		if (pInfo->IsDirectory) {
@@ -217,6 +218,7 @@ void CRemoteControlClientDlg::LoadFileInfo() {
 		if (cmd < 0) break;
 		pInfo = (PFILEINFO)CClientSocket::GetInstance().GetPacket().strData.c_str();
 	}
+	TRACE("客户端接受到%d个文件\r\n", nCount);
 	g_Client.CloseSocket();
 }
 
