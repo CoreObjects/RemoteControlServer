@@ -57,6 +57,9 @@
     <ClInclude Include="..\CClientSocket\ClientSocket.h">
       <Filter>CClientSocket</Filter>
     </ClInclude>
+    <ClInclude Include="WatchDialog.h">
+      <Filter>Page</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RemoteControlClient.cpp">
@@ -70,6 +73,9 @@
     </ClCompile>
     <ClCompile Include="..\CClientSocket\ClientSocket.cpp">
       <Filter>CClientSocket</Filter>
+    </ClCompile>
+    <ClCompile Include="WatchDialog.cpp">
+      <Filter>Page</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

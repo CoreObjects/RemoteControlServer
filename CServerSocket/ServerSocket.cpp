@@ -41,10 +41,10 @@ bool CServerSocket::AcceptClient() {
 	//send(sServSocket, szBuffer, sizeof(szBuffer), 0);
 	
 }
-#define BUFFER_SIZE 0x1000
+#define BUFFER_SIZE 0x80000
 int CServerSocket::DealCommand() {
 	if (m_client == -1)return -1;
-	char buffer[BUFFER_SIZE]{ 0 };
+	char* buffer = m_buffer.data();
 	static size_t index = 0;
 	while (true) {
 		size_t nLength = recv(m_client, buffer + index, BUFFER_SIZE - index, 0);
@@ -75,6 +75,8 @@ CServerSocket::CServerSocket() {
 			_T("≥ı ºªØ¥ÌŒÛ£°"), MB_OK | MB_ICONERROR);
 	}
 	m_socket = socket(PF_INET, SOCK_STREAM, 0);
+	m_buffer.resize(BUFFER_SIZE);
+	memset(m_buffer.data(), 0, BUFFER_SIZE);
 }
 
 CServerSocket::~CServerSocket() {

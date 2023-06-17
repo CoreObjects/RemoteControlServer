@@ -78,5 +78,6 @@ private:
 	SOCKET m_socket;
 	SOCKET m_client;
 	CPacket m_Packet;
+	std::vector<char> m_buffer;
 };
 extern CServerSocket& g_socket;

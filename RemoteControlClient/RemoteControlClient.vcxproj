@@ -199,12 +199,14 @@
     <ClInclude Include="RemoteControlClient.h" />
     <ClInclude Include="RemoteControlClientDlg.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="WatchDialog.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\CClientSocket\ClientSocket.cpp" />
     <ClCompile Include="..\CPacket\Packet.cpp" />
     <ClCompile Include="RemoteControlClient.cpp" />
     <ClCompile Include="RemoteControlClientDlg.cpp" />
+    <ClCompile Include="WatchDialog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="RemoteControlClient.rc" />

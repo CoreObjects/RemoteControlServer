@@ -44,7 +44,7 @@ bool CClientSocket::InitSocket(DWORD dwIp,WORD wPort) {
 	}
 	return true;
 }
-#define BUFFER_SIZE 0x1000
+#define BUFFER_SIZE 0x80000
 int CClientSocket::DealCommand() {
 	if (m_socket == -1)return -1;
 	char* buffer = m_buffer.data();
@@ -77,6 +77,7 @@ CClientSocket::CClientSocket() {
 			_T("≥ı ºªØ¥ÌŒÛ£°"), MB_OK | MB_ICONERROR);
 	}
 	m_buffer.resize(BUFFER_SIZE);
+	memset(m_buffer.data(), 0, BUFFER_SIZE);
 }
 
 CClientSocket::~CClientSocket() {
